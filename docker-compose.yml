@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  # Django Web Service
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000 --noreload # <--- Starts the Django server
+    ports:
+      - "8000:8000"  # Exposing port 8000 to the host machine
+    volumes:
+      - .:/app  # Optional: sync local code with container for live edits
+    depends_on:
+      - db  # Ensures the db service is started before the web service
+    environment:
+      - DB_HOST=db  # Host name of the MySQL database container
+      - DB_PORT=3306  # Default MySQL port
+      - DB_NAME=fraud_detection_db  # Database name
+      - DB_USER=django_user  # MySQL user
+      - DB_PASSWORD=django_user12345@#  # MySQL user password
+
+  # MySQL Database Service
+  db:
+    image: mysql:8.0  # Using MySQL 8.0 image
+    command: --default-authentication-plugin=mysql_native_password  # Ensuring compatibility for older clients
+    environment:
+      MYSQL_DATABASE: fraud_detection_db  # The database name to create
+      MYSQL_ROOT_PASSWORD: django_user12345@#  # Root user password
+      MYSQL_USER: django_user  # Non-root user for Django
+      MYSQL_PASSWORD: django_user12345@#  # Password for non-root user
+    volumes:
+      - mysql_data:/var/lib/mysql  # Persist MySQL data
+
+# Volumes for MySQL data persistence
+volumes:
+  mysql_data:
